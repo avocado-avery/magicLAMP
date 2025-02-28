@@ -3,6 +3,9 @@
 # Get the directory of the current script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DB_SETUP_SCRIPT="$SCRIPT_DIR/sqlsetup"
+PRESTA_INSTALLER="$SCRIPT_DIR/prestashop_installer"
+ZEN_INSTALLER="$SCRIPT_DIR/zencart_installer"
+OSCOMMERCE_INSTALLER="$SCRIPT_DIR/oscommerce_installer"
 
 # Function to detect the OS and package manager
 detect_os() {
@@ -126,6 +129,21 @@ if [ -f "$DB_SETUP_SCRIPT" ]; then
     setup_database "$DB_NAME" "$DB_USER" "$DB_PASS"
 else
     echo "Database setup script not found!"
+    exit 1
+fi
+
+# Call the appropriate installer script
+if [[ "$CMS_NAME" == "prestashop" && -f "$PRESTA_INSTALLER" ]]; then
+    source "$PRESTA_INSTALLER"
+    prestashop_installer
+elif [[ "$CMS_NAME" == "zencart" && -f "$ZEN_INSTALLER" ]]; then
+    source "$ZEN_INSTALLER"
+    zencart_installer
+elif [[ "$CMS_NAME" == "oscommerce" && -f "$OSCOMMERCE_INSTALLER" ]]; then
+    source "$OSCOMMERCE_INSTALLER"
+    oscommerce_installer
+else
+    echo "Installer script for $CMS_NAME not found!"
     exit 1
 fi
 

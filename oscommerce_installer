@@ -1,0 +1,54 @@
+#!/bin/bash
+
+detect_ip() {
+    IP=$(hostname -I | awk '{print $1}')
+}
+
+oscommerce_installer() {
+# Define the URL of the osCommerce installation
+BASE_URL="http://$IP/oscommerce/install"
+
+# Step 1: Send the language selection
+curl -s -X POST "$BASE_URL/index.php?step=1" \
+    -d "language=en" \
+    -o /dev/null
+
+# Step 2: Send the license agreement acceptance
+curl -s -X POST "$BASE_URL/index.php?step=2" \
+    -d "license_agreement=1" \
+    -o /dev/null
+
+# Step 3: Send the system compatibility check (skip if not needed)
+curl -s -X POST "$BASE_URL/index.php?step=3" \
+    -o /dev/null
+
+# Step 4: Send the database server information
+curl -s -X POST "$BASE_URL/index.php?step=4" \
+    -d "DB_SERVER=localhost" \
+    -d "DB_SERVER_USERNAME=oscommerce" \
+    -d "DB_SERVER_PASSWORD=oscommerce" \
+    -d "DB_DATABASE=oscommerce" \
+    -d "DB_TABLE_PREFIX=os_" \
+    -o /dev/null
+
+# Step 5: Send the web server information
+curl -s -X POST "$BASE_URL/index.php?step=5" \
+    -d "HTTP_WWW_ADDRESS=http://localhost/oscommerce/" \
+    -d "HTTPS_WWW_ADDRESS=https://localhost/oscommerce" \
+    -d "DIR_FS_DOCUMENT_ROOT=/var/www/html/oscommerce" \
+    -o /dev/null
+
+# Step 6: Send the online store settings
+curl -s -X POST "$BASE_URL/index.php?step=6" \
+    -d "CFG_STORE_NAME=MyStore" \
+    -d "CFG_STORE_OWNER_NAME=Admin" \
+    -d "CFG_STORE_OWNER_EMAIL_ADDRESS=admin@example.com" \
+    -d "CFG_ADMINISTRATOR_USERNAME=admin" \
+    -d "CFG_ADMINISTRATOR_PASSWORD=admin" \
+    -d "CFG_ADMINISTRATOR_PASSWORD_CONFIRM=admin" \
+    -o /dev/null
+
+# Step 7: Finalize the installation
+curl -s -X POST "$BASE_URL/index.php?step=7" \
+    -o /dev/null
+}

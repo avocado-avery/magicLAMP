@@ -1,0 +1,53 @@
+#!/bin/bash
+
+detect_ip() {
+    IP=$(hostname -I | awk '{print $1}')
+}
+
+prestashop_installer() {
+# Define the URL of the PrestaShop installation
+BASE_URL="http://$IP/prestashop/install"
+
+# Step 1: Send the language selection
+curl -s -X POST "$BASE_URL/index.php?step=1" \
+    -d "language=en" \
+    -o /dev/null
+
+# Step 2: Send the license agreement acceptance
+curl -s -X POST "$BASE_URL/index.php?step=2" \
+    -d "license_agreement=1" \
+    -o /dev/null
+
+# Step 3: Send the system compatibility check (skip if not needed)
+curl -s -X POST "$BASE_URL/index.php?step=3" \
+    -o /dev/null
+
+# Step 4: Send the shop information
+curl -s -X POST "$BASE_URL/index.php?step=4" \
+    -d "shop_name=MyShop" \
+    -d "shop_activity=1" \
+    -d "shop_country=US" \
+    -d "shop_timezone=America/New_York" \
+    -d "admin_firstname=Admin" \
+    -d "admin_lastname=User" \
+    -d "admin_email=admin@example.com" \
+    -d "admin_password=admin" \
+    -d "admin_password_confirm=admin" \
+    -o /dev/null
+
+# Step 5: Send the database configuration
+curl -s -X POST "$BASE_URL/index.php?step=5" \
+    -d "db_server=localhost" \
+    -d "db_name=prestashop" \
+    -d "db_user=prestashop" \
+    -d "db_password=prestashop" \
+    -d "db_prefix=ps_" \
+    -d "db_clear=0" \
+    -d "db_create=1" \
+    -d "db_engine=InnoDB" \
+    -o /dev/null
+
+# Step 6: Finalize the installation
+curl -s -X POST "$BASE_URL/index.php?step=6" \
+    -o /dev/null
+}

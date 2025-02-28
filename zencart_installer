@@ -1,0 +1,47 @@
+#!/bin/bash
+
+detect_ip() {
+    IP=$(hostname -I | awk '{print $1}')
+}
+
+prestashop_installer() {
+# Define the URL of the Zen Cart installation
+BASE_URL="http://$IP/zencart/zc_install"
+
+# Step 1: Send the language selection
+curl -s -X POST "$BASE_URL/index.php?main_page=language_selection" \
+    -d "language=en" \
+    -o /dev/null
+
+# Step 2: Send the license agreement acceptance
+curl -s -X POST "$BASE_URL/index.php?main_page=license" \
+    -d "license_agreement=1" \
+    -o /dev/null
+
+# Step 3: Send the system inspection (skip if not needed)
+curl -s -X POST "$BASE_URL/index.php?main_page=inspect" \
+    -o /dev/null
+
+# Step 4: Send the system setup
+curl -s -X POST "$BASE_URL/index.php?main_page=system_setup" \
+    -d "store_demo=0" \
+    -d "store_demo_type=none" \
+    -d "admin_email=admin@example.com" \
+    -d "admin_pass=admin" \
+    -d "admin_pass_confirm=admin" \
+    -o /dev/null
+
+# Step 5: Send the database setup
+curl -s -X POST "$BASE_URL/index.php?main_page=database_setup" \
+    -d "db_type=mysql" \
+    -d "db_server=localhost" \
+    -d "db_name=zencart" \
+    -d "db_user=zencart" \
+    -d "db_pass=zencart" \
+    -d "db_prefix=zc_" \
+    -o /dev/null
+
+# Step 6: Finalize the installation
+curl -s -X POST "$BASE_URL/index.php?main_page=install" \
+    -o /dev/null
+}

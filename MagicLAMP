@@ -36,6 +36,10 @@ translate_packages() {
             install_packages httpd mariadb-server php php-mysqlnd php-gd php-mbstring php-intl php-pecl-imagick php-opcache php-xml php-json php-bcmath php-pecl-zip
             ;;
         *)
+            echo "Unsupported OS"
+            exit 1
+            ;;
+    esac
 }
 
 detect_os
@@ -58,6 +62,7 @@ install_cms() {
             chown -R apache:apache "$CMS_DIR"
             ;;
         *)
+    esac
 }
 
 case "$1" in

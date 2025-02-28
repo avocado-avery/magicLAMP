@@ -76,3 +76,4 @@ case "$1" in
         ;;
 esac
 
+echo "Installation completed successfully"

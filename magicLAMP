@@ -1,6 +1,8 @@
 #!/bin/bash
 
-DB_SETUP_SCRIPT="./sqlsetup"
+# Get the directory of the current script
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DB_SETUP_SCRIPT="$SCRIPT_DIR/sqlsetup"
 
 # Function to detect the OS and package manager
 detect_os() {
@@ -9,16 +11,19 @@ detect_os() {
         OS="$ID"
     fi
 }
+
 detect_ip() {
     IP=$(hostname -I | awk '{print $1}')
 }
+
 # Function to install packages
 install_packages() {
     detect_os
     case "$OS" in
         ubuntu|debian)
             export DEBIAN_FRONTEND=noninteractive
-            apt-get -o DPkg::Lock::Timeout=-1 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -qq -y "$@"
+            apt-get update -qq
+            apt-get install -qq -y "$@"
             ;;
         rhel|centos|fedora|rocky)
             yum install -y "$@"
@@ -34,10 +39,10 @@ translate_packages() {
     detect_os
     case "$OS" in
         ubuntu|debian)
-            install_packages apache2 mariadb-server php libapache2-mod-php php-curl php-intl php-gd php-json php-mbstring php-xml php-zip php-bcmath php-mysql php-imagick composer
+            install_packages apache2 mariadb-server php libapache2-mod-php php-curl php-intl php-gd php-json php-mbstring php-xml php-zip php-bcmath php-mysql php-imagick curl wget unzip
             ;;
         rhel|centos|fedora|rocky)
-            install_packages httpd mariadb-server php php-mysqlnd php-gd php-mbstring php-intl php-pecl-imagick php-opcache php-xml php-json php-bcmath php-pecl-zip composer
+            install_packages httpd mariadb-server php php-mysqlnd php-gd php-mbstring php-intl php-pecl-imagick php-opcache php-xml php-json php-bcmath php-pecl-zip curl wget unzip
             ;;
         *)
             echo "Unsupported OS"
@@ -46,8 +51,17 @@ translate_packages() {
     esac
 }
 
+install_composer() {
+    if ! command -v composer &> /dev/null; then
+        echo "Composer not found, installing..."
+        curl -sS https://getcomposer.org/installer | php > /dev/null
+        mv composer.phar /usr/local/bin/composer
+    fi
+}
+
 detect_os
-install_packages
+translate_packages
+install_composer
 detect_ip
 
 install_cms() {
@@ -58,11 +72,11 @@ install_cms() {
     
     # Download the latest release of the CMS
     echo "Installing $CMS_NAME..."
-    wget -qO- "$CMS_REPO" | tar -xz -C "$CMS_DIR" --strip-components=1
+    wget -qO- "$CMS_REPO" | tar -xz -C "$CMS_DIR" --strip-components=1 > /dev/null
 
     if [ -f "$CMS_DIR/composer.json" ]; then
         cd "$CMS_DIR" || exit
-        composer install --no-interaction --no-scripts --no-dev
+        composer install --no-interaction --no-scripts --no-dev > /dev/null
     fi
 
     chmod -R 755 "$CMS_DIR"
@@ -102,7 +116,9 @@ while [[ $# -gt 0 ]]; do
         echo "Usage: $0 [--presta | --commerce | --zen]"
         exit 1
         ;;
-esac
+    esac
+    shift
+done
 
 if [ -f "$DB_SETUP_SCRIPT" ]; then
     echo "Setting up database for $CMS_NAME..."

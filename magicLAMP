@@ -1,0 +1,116 @@
+#!/bin/bash
+
+DB_SETUP_SCRIPT="./sqlsetup"
+
+# Function to detect the OS and package manager
+detect_os() {
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        OS="$ID"
+    fi
+}
+detect_ip() {
+    IP=$(hostname -I | awk '{print $1}')
+}
+# Function to install packages
+install_packages() {
+    detect_os
+    case "$OS" in
+        ubuntu|debian)
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get -o DPkg::Lock::Timeout=-1 -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -qq -y "$@"
+            ;;
+        rhel|centos|fedora|rocky)
+            yum install -y "$@"
+            ;;
+        *)
+            echo "Unsupported OS"
+            exit 1
+            ;;
+    esac
+}
+
+translate_packages() {
+    detect_os
+    case "$OS" in
+        ubuntu|debian)
+            install_packages apache2 mariadb-server php libapache2-mod-php php-curl php-intl php-gd php-json php-mbstring php-xml php-zip php-bcmath php-mysql php-imagick composer
+            ;;
+        rhel|centos|fedora|rocky)
+            install_packages httpd mariadb-server php php-mysqlnd php-gd php-mbstring php-intl php-pecl-imagick php-opcache php-xml php-json php-bcmath php-pecl-zip composer
+            ;;
+        *)
+            echo "Unsupported OS"
+            exit 1
+            ;;
+    esac
+}
+
+detect_os
+install_packages
+detect_ip
+
+install_cms() {
+    CMS_NAME=$1
+    CMS_REPO=$2
+    CMS_DIR="/var/www/html/$CMS_NAME"
+    mkdir -p "$CMS_DIR"
+    
+    # Download the latest release of the CMS
+    echo "Installing $CMS_NAME..."
+    wget -qO- "$CMS_REPO" | tar -xz -C "$CMS_DIR" --strip-components=1
+
+    if [ -f "$CMS_DIR/composer.json" ]; then
+        cd "$CMS_DIR" || exit
+        composer install --no-interaction --no-scripts --no-dev
+    fi
+
+    chmod -R 755 "$CMS_DIR"
+    detect_os
+    case "$OS" in
+        ubuntu|debian)
+            chown -R www-data:www-data "$CMS_DIR"
+            ;;
+        rhel|centos|fedora|rocky)
+            chown -R apache:apache "$CMS_DIR"
+            ;;
+        *)
+    esac
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --presta)
+        install_cms "prestashop" "https://github.com/PrestaShop/PrestaShop/archive/refs/tags/8.2.1.tar.gz"
+        DB_NAME="prestashop"
+        DB_USER="prestashop"
+        DB_PASS="prestashop"
+        ;;
+    --commerce)
+        install_cms "oscommerce" "https://github.com/osCommerce/oscommerce2/archive/refs/tags/v2.3.4.1.tar.gz"
+        DB_NAME="oscommerce"
+        DB_USER="oscommerce"
+        DB_PASS="oscommerce"
+        ;;
+    --zen)
+        install_cms "zencart" "https://github.com/zencart/zencart/archive/refs/tags/v1.5.7.tar.gz"
+        DB_NAME="zencart"
+        DB_USER="zencart"
+        DB_PASS="zencart"
+        ;;
+    *)
+        echo "Usage: $0 [--presta | --commerce | --zen]"
+        exit 1
+        ;;
+esac
+
+if [ -f "$DB_SETUP_SCRIPT" ]; then
+    echo "Setting up database for $CMS_NAME..."
+    source "$DB_SETUP_SCRIPT"  # Import and run the database setup script with the passed arguments
+    setup_database "$DB_NAME" "$DB_USER" "$DB_PASS"
+else
+    echo "Database setup script not found!"
+    exit 1
+fi
+
+echo "Script Completed, you can now access your website at http://$IP/$CMS_NAME"

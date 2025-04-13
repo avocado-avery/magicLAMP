@@ -34,11 +34,11 @@ magicLAMP is a Bash-based automation tool designed to streamline the deployment 
    ```
 1. **Make The Script Executable:**
  
-  ```bash
-  chmod +x magicLAMP
-  ```
+    ```bash
+    chmod +x magicLAMP
+    ```
 3. 1. **Run The Script:**
 
-  ```bash
-  ./magicLAMP --<CMS>
-  ```
+    ```bash
+    ./magicLAMP --<CMS>
+    ```

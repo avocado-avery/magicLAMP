@@ -1,4 +1,4 @@
-# magicLAMP – Automated LAMP Stack Deployment Script
+# Automated LAMP Stack Deployment Script
 
 magicLAMP is a Bash-based automation tool designed to streamline the deployment of LAMP (Linux, Apache, MySQL/MariaDB, PHP) stacks. This script automatically installs required packages, configures web servers, deploys popular Content Management Systems (CMS), and sets up corresponding SQL databases and users. It is ideal for rapid prototyping, testing environments, and ensuring consistent setups across deployments.
 

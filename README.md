@@ -15,6 +15,7 @@ magicLAMP is a Bash-based automation tool designed to streamline the deployment 
   - PrestaShop
   - osCommerce
   - ZenCart  
+  
   Configures directories, ownership, and permissions based on detected OS.
 
 - **Database Setup:**  
@@ -37,7 +38,7 @@ magicLAMP is a Bash-based automation tool designed to streamline the deployment 
     ```bash
     chmod +x magicLAMP
     ```
-3. 1. **Run The Script:**
+3. **Run The Script:**
 
     ```bash
     ./magicLAMP --<CMS>
